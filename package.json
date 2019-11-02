@@ -1,0 +1,23 @@
+{
+  "name": "comicreader",
+  "version": "1.0.0",
+  "description": "A comic reader based on folder structure organisation",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yash0212/ComicReader.git"
+  },
+  "author": "Yash Lotan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yash0212/ComicReader/issues"
+  },
+  "homepage": "https://github.com/yash0212/ComicReader#readme",
+  "devDependencies": {
+    "electron": "^7.0.1"
+  }
+}
