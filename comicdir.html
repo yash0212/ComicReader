@@ -1,10 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>ComicReader</title>
-  </head>
-  <body>
-    Display Directory contents here
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<title>ComicReader</title>
+	</head>
+	<body>
+		Display Directory contents here
+
+		<script>
+			const Store = require("electron-store");
+			const path = require("path");
+			var fs = require("fs");
+			const store = new Store();
+			const comicDir = store.get("comicDir");
+			var filesAndFolders = fs.readdirSync(comicDir);
+			var files = [];
+			var folders = [];
+			for (const fileorFolder of filesAndFolders) {
+				let pathToFile = path.join(comicDir, fileorFolder);
+				let stat = fs.statSync(pathToFile);
+				if (stat.isDirectory()) {
+					folders.push(pathToFile);
+				} else {
+					files.push(pathToFile);
+				}
+			}
+		</script>
+	</body>
 </html>
