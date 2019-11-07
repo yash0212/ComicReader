@@ -8,7 +8,7 @@
 			href="./node_modules/font-awesome/css/font-awesome.min.css"
 		/>
 		<link rel="stylesheet" href="./styles/comicdir.css" />
-		<script src="./Uint8ToString.js"></script>
+		<!-- <script src="./Uint8ToString.js"></script> -->
 	</head>
 	<body>
 		<!-- <i class="fa fa-folder-o" style="font-size: 50px;"></i> -->
@@ -19,8 +19,9 @@
 			var fs = require("fs");
 			const store = new Store();
 			const comicDir = store.get("comicDir");
-			const unzipper = require("unzipper");
-			var unrar = require("electron-unrar-js");
+			// const unzipper = require("unzipper");
+			// var unrar = require("electron-unrar-js");
+			const { fork } = require("child_process");
 
 			var filesAndFolders = fs.readdirSync(comicDir);
 			var files = [];
@@ -44,106 +45,43 @@
 				var dirEl = document.getElementById("directory");
 				dirEl.innerHTML = dirEl.innerHTML.concat(
 					`
-								<div class="tile">
-									<img src="./images/folder-icon.png" class="folder-icon"/>
-									<div>${folder.name}</div>
-								</div>
-								`
+					<div class="tile">
+						<img src="./images/folder-icon.png" class="folder-icon"/>
+						<div>${folder.name}</div>
+						</div>
+						`
 				);
 			}
 			for (const file of files) {
-				var imgFound = 0;
-				var imgData = "";
-				if (
-					path.extname(file.path) === ".cbz" ||
-					path.extname(file.path) === ".zip"
-				) {
-					fs.createReadStream(file.path)
-						.pipe(unzipper.Parse())
-						.on("entry", async function(entry) {
-							const fileName = entry.path;
-							const type = entry.type; // 'Directory' or 'File'
-							const size = entry.vars.uncompressedSize; // There is also compressedSize;
-							let obj;
-							if (
-								!imgFound &&
-								type == "File" &&
-								fileName.endsWith(".jpg")
-							) {
-								imgFound = 1;
-								obj = await entry.buffer();
-								imgData = obj.toString("base64");
-								// document.getElementById("test").src =
-								// 	"data:image/jpeg;base64, " +
-								// 	obj.toString("base64");
-								var dirEl = document.getElementById(
-									"directory"
-								);
-								dirEl.innerHTML = dirEl.innerHTML.concat(
-									`
-										<div class="tile">
-											<img src="data:image/jpeg;base64, ${imgData}" class="comicThumbnail"/>
-											<div>${file.name}</div>
-										</div>
-									`
-								);
-							} else {
-								entry.autodrain();
-							}
-						});
-				} else if (
-					path.extname(file.path) === ".cbr" ||
-					path.extname(file.path) === ".rar"
-				) {
-					// Read the archive file into a typedArray
-					var buf = Uint8Array.from(fs.readFileSync(file.path))
-						.buffer;
-					var extractor = unrar.createExtractorFromData(buf);
+				var dirEl = document.getElementById("directory");
+				dirEl.innerHTML = dirEl.innerHTML.concat(
+					`
+					<div class="tile">
+						<img src="" class="comicThumbnail" id="${file.name}"/>
+						<div>${file.name}</div>
+					</div>
+					`
+				);
+			}
 
-					var fileList = extractor.getFileList();
-					if (fileList[0].state === "SUCCESS") {
-						let found = 0;
-						var thumbnailFileName = fileList[1].fileHeaders
-							.sort((a, b) =>
-								a.name.toLowerCase() < b.name.toLowerCase()
-									? -1
-									: 0
-							)
-							.filter(x => {
-								if (!found && path.extname(x.name) == ".jpg") {
-									found = 1;
-									return true;
-								}
-							})
-							.map(x => x.name);
+			var thumbnailQueue = [...files];
 
-						var extracted = extractor.extractFiles([
-							thumbnailFileName
-						]);
+			for (const file of files) {
+				let forked = fork("./fileThumbnail.js");
+				console.log("Initiated: ", forked.pid);
+				forked.on("message", data => {
+					imgData = data.imgData;
+					id = data.file.name;
+					document.getElementById(id).src =
+						"data:image/jpeg;base64, " + imgData;
 
-						if (extracted[0].state === "SUCCESS") {
-							if (
-								extracted[1].files[0].extract[0].state ===
-								"SUCCESS"
-							) {
-								imgData = extracted[1].files[0].extract[1];
-								var dirEl = document.getElementById(
-									"directory"
-								);
-								imgData = Uint8ToString(imgData);
-
-								dirEl.innerHTML = dirEl.innerHTML.concat(
-									`
-										<div class="tile">
-											<img src="data:image/jpeg;base64, ${imgData}" class="comicThumbnail"/>
-											<div>${file.name}</div>
-										</div>
-									`
-								);
-							}
-						}
-					}
-				}
+					forked.kill();
+					console.log("Terminated: ", forked.pid);
+				});
+				// forked.on("close", code => {
+				// 	console.log(`child process exited with code ${code}`);
+				// });
+				forked.send(file);
 			}
 		</script>
 	</body>

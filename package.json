@@ -21,6 +21,7 @@
     "electron": "^7.0.1"
   },
   "dependencies": {
+    "btoa": "^1.2.1",
     "electron-store": "^5.1.0",
     "electron-unrar-js": "^1.0.1",
     "font-awesome": "^4.7.0",
