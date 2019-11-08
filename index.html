@@ -1,24 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>ComicReader</title>
-  </head>
-  <body>
-    <button id="directory-btn">Select Directory</button>
-    <script>
-      document.getElementById("directory-btn").addEventListener("click", e => {
-        const { dialog } = require("electron").remote;
-        const Store = require("electron-store");
-        const store = new Store();
-        const { ipcRenderer } = require("electron");
-        var directory = dialog.showOpenDialogSync({
-          properties: ["openDirectory"]
-        });
-        if (directory !== undefined) {
-          store.set("comicDir", directory[0]);
-          ipcRenderer.send("index", { msg: "dirSet" });
-        }
-      });
-    </script>
-  </body>
+	<head>
+		<title>ComicReader</title>
+	</head>
+	<body>
+		<button id="directory-btn">Select Directory</button>
+		<script>
+			document
+				.getElementById("directory-btn")
+				.addEventListener("click", e => {
+					const { dialog } = require("electron").remote;
+					const Store = require("electron-store");
+					const store = new Store();
+					const { ipcRenderer } = require("electron");
+					var directory = dialog.showOpenDialogSync({
+						properties: ["openDirectory"]
+					});
+					if (directory !== undefined) {
+						store.set("comicDir", directory[0]);
+						store.set("pwd", directory[0]);
+						ipcRenderer.send("index", { msg: "dirSet" });
+					}
+				});
+		</script>
+	</body>
 </html>

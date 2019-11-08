@@ -17,6 +17,19 @@ body {
 	flex-direction: column;
 	align-items: center;
 }
+.folder-tile:hover {
+	/* background-color: #a9abb3; */
+	cursor: pointer;
+}
+.file-tile:hover {
+	cursor: default;
+}
+.folder-hover {
+	background-color: #a9abb3;
+}
+.folder-active {
+	background-color: green;
+}
 .folder-icon {
 	width: 100%;
 	/* height: 110px; */

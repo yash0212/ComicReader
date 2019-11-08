@@ -8,33 +8,60 @@
 			href="./node_modules/font-awesome/css/font-awesome.min.css"
 		/>
 		<link rel="stylesheet" href="./styles/comicdir.css" />
-		<!-- <script src="./Uint8ToString.js"></script> -->
+		<script>
+			window.$ = window.jQuery = require("jquery");
+		</script>
 	</head>
 	<body>
-		<!-- <i class="fa fa-folder-o" style="font-size: 50px;"></i> -->
-		<div id="directory"></div>
+		<div id="directory">
+			<!-- <div class="tile folder-tile">
+				<img src="./images/folder-icon.png" class="folder-icon" />
+				<div>Folder Name</div>
+			</div>
+			<div class="tile file-tile">
+				<img src="" class="comicThumbnail" id="filename" />
+				<div>File Name</div>
+			</div> -->
+		</div>
 		<script>
 			const Store = require("electron-store");
 			const path = require("path");
 			var fs = require("fs");
 			const store = new Store();
 			const comicDir = store.get("comicDir");
-			// const unzipper = require("unzipper");
-			// var unrar = require("electron-unrar-js");
+			const pwd = store.get("pwd");
+			const fileFormats = [".cbr", ".rar", ".cbz", ".zip", ".pdf"];
+
 			const { fork } = require("child_process");
 
-			var filesAndFolders = fs.readdirSync(comicDir);
+			if (comicDir !== pwd) {
+				var dirEl = document.getElementById("directory");
+				dirEl.innerHTML = dirEl.innerHTML.concat(
+					`
+					<div class="tile folder-tile" id="home-tile">
+						<img src="./images/folder-icon.png" class="folder-icon" />
+						<div>Home</div>
+					</div>
+					<div class="tile folder-tile" id="previous-dir-tile">
+						<img src="./images/folder-icon.png" class="folder-icon" />
+						<div>Go Back</div>
+					</div>
+					`
+				);
+			}
+			var filesAndFolders = fs.readdirSync(pwd);
 			var files = [];
 			var folders = [];
 			for (const fileorFolder of filesAndFolders) {
-				let pathToFile = path.join(comicDir, fileorFolder);
+				let pathToFile = path.join(pwd, fileorFolder);
 				let stat = fs.statSync(pathToFile);
+				let fileExt = path.extname(pathToFile);
 				if (stat.isDirectory()) {
 					folders.push({
 						name: fileorFolder,
 						path: pathToFile
 					});
-				} else {
+				} else if (fileFormats.includes(fileExt)) {
 					files.push({
 						name: fileorFolder,
 						path: pathToFile
@@ -45,18 +72,18 @@
 				var dirEl = document.getElementById("directory");
 				dirEl.innerHTML = dirEl.innerHTML.concat(
 					`
-					<div class="tile">
+					<div class="tile folder-tile">
 						<img src="./images/folder-icon.png" class="folder-icon"/>
 						<div>${folder.name}</div>
-						</div>
-						`
+					</div>
+					`
 				);
 			}
 			for (const file of files) {
 				var dirEl = document.getElementById("directory");
 				dirEl.innerHTML = dirEl.innerHTML.concat(
 					`
-					<div class="tile">
+					<div class="tile file-tile">
 						<img src="" class="comicThumbnail" id="${file.name}"/>
 						<div>${file.name}</div>
 					</div>
@@ -66,7 +93,7 @@
 
 			var thumbnailQueue = [...files];
 
-			for (let i = 0; i < 3; i++) {
+			for (let i = 0; i < 1; i++) {
 				let thumbnailFork = fork("./fileThumbnail.js");
 				thumbnailFork.on("message", data => {
 					imgData = data.imgData;
@@ -84,6 +111,78 @@
 				});
 				if (thumbnailQueue.length > 0) {
 					thumbnailFork.send(thumbnailQueue.shift());
+				}
+			}
+		</script>
+		<script>
+			$(document).on("mouseenter", ".file-tile", function(e) {
+				$(this).css("background-color", "#a9abb3");
+			});
+
+			$(document).on("mouseleave", ".file-tile", function(e) {
+				$(this).css("background-color", "white");
+			});
+
+			$(document).on("mouseenter", ".folder-tile", function(e) {
+				if (!$(this).hasClass("folder-active")) {
+					$(this).addClass("folder-hover");
+				}
+			});
+
+			$(document).on("mouseleave", ".folder-tile", function(e) {
+				$(this).removeClass("folder-hover");
+			});
+
+			$(document).on("click", ".file-tile", function(e) {
+				resetTiles();
+			});
+
+			$(document).on("click", ".folder-tile", function(e) {
+				resetTiles();
+				$(this).addClass("folder-active");
+			});
+
+			$(document).on("dblclick", ".folder-tile", function(e) {
+				let newDir;
+				if ($(this).attr("id") === "home-tile") {
+					newDir = comicDir;
+				} else if ($(this).attr("id") === "previous-dir-tile") {
+					newDir = path.normalize(pwd.concat(path.sep.concat("..")));
+				} else {
+					newDir = path.join(
+						store.get("pwd"),
+						$(this)
+							.find("div")
+							.text()
+					);
+				}
+				store.set("pwd", newDir);
+
+				const { ipcRenderer } = require("electron");
+
+				ipcRenderer.send("index", { msg: "dirSet" });
+			});
+
+			$(document).on("dblclick", ".file-tile", function(e) {
+				console.log("opening file");
+				openFile();
+			});
+		</script>
+		<script>
+			function resetTiles() {
+				resetFolderTiles();
+				resetFilesTiles();
+			}
+			function resetFolderTiles() {
+				let folders = $("#directory").find(".folder-tile");
+				for (let folder of folders) {
+					$(folder).removeClass("folder-active");
+				}
+			}
+			function resetFilesTiles() {
+				let files = $("#directory").find(".file-tile");
+				for (let file of files) {
+					$(file).removeClass("file-active");
 				}
 			}
 		</script>

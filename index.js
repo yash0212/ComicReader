@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const Store = require("electron-store");
 const store = new Store();
+var $ = require("jquery");
 
 const isMac = process.platform === "darwin";
 let win;
@@ -20,6 +21,7 @@ function createWindow() {
 	if (comicDir === undefined || comicDir === "") {
 		win.loadFile("index.html");
 	} else {
+		store.set("pwd", comicDir);
 		win.loadFile("comicdir.html");
 	}
 	win.webContents.openDevTools();
