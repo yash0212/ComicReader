@@ -71,8 +71,11 @@
 				thumbnailFork.on("message", data => {
 					imgData = data.imgData;
 					id = data.file.name;
+					imgExt = data.imgExt.slice(1);
+
 					document.getElementById(id).src =
-						"data:image/jpeg;base64, " + imgData;
+						"data:image/" + imgExt + ";base64, " + imgData;
+
 					if (thumbnailQueue.length > 0) {
 						thumbnailFork.send(thumbnailQueue.shift());
 					} else {

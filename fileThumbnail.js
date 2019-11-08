@@ -2,8 +2,8 @@ const path = require("path");
 const fs = require("fs");
 const unzipper = require("unzipper");
 const unrar = require("electron-unrar-js");
-const btoa = require("btoa");
 const Uint8ToString = require("./Uint8ToString.js");
+const imageFormats = [".jpg", ".png", ".webp"];
 
 process.on("message", file => {
 	if (
@@ -16,13 +16,19 @@ process.on("message", file => {
 			.on("entry", async function(entry) {
 				const fileName = entry.path;
 				const type = entry.type; // 'Directory' or 'File'
+				let fileExt = path.extname(fileName);
 				let obj;
-				if (!imgFound && type == "File" && fileName.endsWith(".jpg")) {
+				if (
+					!imgFound &&
+					type == "File" &&
+					imageFormats.includes(fileExt)
+				) {
 					imgFound = 1;
 					obj = await entry.buffer();
 					imgData = obj.toString("base64");
 					process.send({
 						imgData: imgData,
+						imgExt: fileExt,
 						file: file
 					});
 				} else {
@@ -45,22 +51,24 @@ process.on("message", file => {
 					a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0
 				)
 				.filter(x => {
-					if (!found && path.extname(x.name) == ".jpg") {
+					if (!found && imageFormats.includes(path.extname(x.name))) {
 						found = 1;
 						return true;
 					}
 				})
 				.map(x => x.name);
 
-			var extracted = extractor.extractFiles([thumbnailFileName]);
+			var extracted = extractor.extractFiles([thumbnailFileName[0]]);
 
 			if (extracted[0].state === "SUCCESS") {
 				if (extracted[1].files[0].extract[0].state === "SUCCESS") {
 					var imgData = extracted[1].files[0].extract[1];
 					imgData = Uint8ToString(imgData);
+					fileExt = path.extname(thumbnailFileName[0]);
 
 					process.send({
 						imgData: imgData,
+						imgExt: fileExt,
 						file: file
 					});
 				}
