@@ -66,22 +66,22 @@
 
 			var thumbnailQueue = [...files];
 
-			for (const file of files) {
-				let forked = fork("./fileThumbnail.js");
-				console.log("Initiated: ", forked.pid);
-				forked.on("message", data => {
+			for (let i = 0; i < 3; i++) {
+				let thumbnailFork = fork("./fileThumbnail.js");
+				thumbnailFork.on("message", data => {
 					imgData = data.imgData;
 					id = data.file.name;
 					document.getElementById(id).src =
 						"data:image/jpeg;base64, " + imgData;
-
-					forked.kill();
-					console.log("Terminated: ", forked.pid);
+					if (thumbnailQueue.length > 0) {
+						thumbnailFork.send(thumbnailQueue.shift());
+					} else {
+						thumbnailFork.kill();
+					}
 				});
-				// forked.on("close", code => {
-				// 	console.log(`child process exited with code ${code}`);
-				// });
-				forked.send(file);
+				if (thumbnailQueue.length > 0) {
+					thumbnailFork.send(thumbnailQueue.shift());
+				}
 			}
 		</script>
 	</body>
