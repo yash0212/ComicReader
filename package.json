@@ -1,33 +1,34 @@
 {
-  "name": "comicreader",
-  "version": "1.0.0",
-  "description": "A comic reader based on folder structure organisation",
-  "main": "index.js",
-  "scripts": {
-    "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/yash0212/ComicReader.git"
-  },
-  "author": "Yash Lotan",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/yash0212/ComicReader/issues"
-  },
-  "homepage": "https://github.com/yash0212/ComicReader#readme",
-  "devDependencies": {
-    "electron": "^7.0.1"
-  },
-  "dependencies": {
-    "btoa": "^1.2.1",
-    "electron-store": "^5.1.0",
-    "electron-unrar-js": "^1.0.1",
-    "font-awesome": "^4.7.0",
-    "jquery": "^3.4.1",
-    "react": "^16.11.0",
-    "react-dom": "^16.11.0",
-    "unzipper": "^0.10.5"
-  }
+	"name": "comicreader",
+	"version": "1.0.0",
+	"description": "A comic reader based on folder structure organisation",
+	"main": "index.js",
+	"scripts": {
+		"start": "electron .",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/yash0212/ComicReader.git"
+	},
+	"author": "Yash Lotan",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/yash0212/ComicReader/issues"
+	},
+	"homepage": "https://github.com/yash0212/ComicReader#readme",
+	"devDependencies": {
+		"electron": "^7.0.1"
+	},
+	"dependencies": {
+		"btoa": "^1.2.1",
+		"electron-store": "^5.1.0",
+		"electron-unrar-js": "^1.0.1",
+		"font-awesome": "^4.7.0",
+		"jquery": "^3.4.1",
+		"react": "^16.11.0",
+		"react-dom": "^16.11.0",
+		"sharp": "^0.23.2",
+		"unzipper": "^0.10.5"
+	}
 }

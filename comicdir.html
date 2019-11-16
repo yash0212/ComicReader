@@ -32,7 +32,7 @@
 			const pwd = store.get("pwd");
 			const fileFormats = [".cbr", ".rar", ".cbz", ".zip", ".pdf"];
 
-			const { fork } = require("child_process");
+			// const { fork } = require("child_process");
 
 			if (comicDir !== pwd) {
 				var dirEl = document.getElementById("directory");
@@ -91,28 +91,38 @@
 				);
 			}
 
-			var thumbnailQueue = [...files];
+			// var thumbnailQueue = [...files];
+			// var forks = [];
+			// for (let i = 0; i < 4; i++) {
+			// 	let thumbnailFork = fork("./fileThumbnail.js");
+			// 	forks.push(thumbnailFork);
+			// 	thumbnailFork.on("message", data => {
+			// 		imgData = data.imgData;
+			// 		id = data.file.name;
+			// 		imgExt = data.imgExt.slice(1);
 
-			for (let i = 0; i < 4; i++) {
-				let thumbnailFork = fork("./fileThumbnail.js");
-				thumbnailFork.on("message", data => {
-					imgData = data.imgData;
-					id = data.file.name;
-					imgExt = data.imgExt.slice(1);
+			// 		document.getElementById(id).src =
+			// 			"data:image/" + imgExt + ";base64, " + imgData;
 
-					document.getElementById(id).src =
-						"data:image/" + imgExt + ";base64, " + imgData;
+			// 		if (thumbnailQueue.length > 0) {
+			// 			thumbnailFork.send(thumbnailQueue.shift());
+			// 		} else {
+			// 			thumbnailFork.kill();
+			// 		}
+			// 	});
+			// 	if (thumbnailQueue.length > 0) {
+			// 		thumbnailFork.send(thumbnailQueue.shift());
+			// 	}
+			// }
+			ipcRenderer.send("thumbnailGenerator", files);
+			ipcRenderer.on("thumbnailGenerator", (e, data) => {
+				imgData = data.imgData;
+				id = data.file.name;
+				imgExt = data.imgExt.slice(1);
 
-					if (thumbnailQueue.length > 0) {
-						thumbnailFork.send(thumbnailQueue.shift());
-					} else {
-						thumbnailFork.kill();
-					}
-				});
-				if (thumbnailQueue.length > 0) {
-					thumbnailFork.send(thumbnailQueue.shift());
-				}
-			}
+				document.getElementById(id).src =
+					"data:image/" + imgExt + ";base64, " + imgData;
+			});
 		</script>
 		<script>
 			$(document).on("mouseenter", ".file-tile", function(e) {
@@ -156,6 +166,10 @@
 							.text()
 					);
 				}
+				// //Kill thumbnail forks before changing directory
+				// for (let fork of forks) {
+				// 	fork.kill();
+				// }
 				store.set("pwd", newDir);
 
 				const { ipcRenderer } = require("electron");
