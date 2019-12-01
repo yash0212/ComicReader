@@ -1,12 +1,12 @@
 const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const Store = require("electron-store");
 const store = new Store();
-var $ = require("jquery");
+// var $ = require("jquery");
 const path = require("path");
-const fs = require("fs");
-const unzipper = require("unzipper");
-const unrar = require("electron-unrar-js");
-const Uint8ToString = require("./Uint8ToString.js");
+// const fs = require("fs");
+// const unzipper = require("unzipper");
+// const unrar = require("electron-unrar-js");
+// const Uint8ToString = require("./Uint8ToString.js");
 const { fork } = require("child_process");
 
 const imageFormats = [".jpg", ".png", ".webp"];

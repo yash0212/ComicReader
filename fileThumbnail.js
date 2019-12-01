@@ -2,10 +2,10 @@ const path = require("path");
 const fs = require("fs");
 const unzipper = require("unzipper");
 const unrar = require("electron-unrar-js");
-const Uint8ToString = require("./Uint8ToString.js");
 const imageFormats = [".jpg", ".png", ".webp"];
+const sharp = require("sharp");
 
-process.on("message", file => {
+process.on("message", async file => {
 	if (
 		path.extname(file.path) === ".cbz" ||
 		path.extname(file.path) === ".zip"
@@ -25,10 +25,19 @@ process.on("message", file => {
 				) {
 					imgFound = 1;
 					obj = await entry.buffer();
-					imgData = obj.toString("base64");
+
+					//Generate thumbnail data
+					imgData = (
+						await sharp(obj)
+							.resize(100, 150)
+							.webp({ quality: 60 })
+							.toBuffer()
+					).toString("base64");
+
+					//Return thumbnail data back to renderer
 					process.send({
-						imgData: imgData,
-						imgExt: fileExt,
+						thumbnailData: imgData,
+						thumbnailExt: fileExt,
 						file: file
 					});
 				} else {
@@ -62,13 +71,23 @@ process.on("message", file => {
 
 			if (extracted[0].state === "SUCCESS") {
 				if (extracted[1].files[0].extract[0].state === "SUCCESS") {
-					var imgData = extracted[1].files[0].extract[1];
-					imgData = Uint8ToString(imgData);
+					var imgData = Buffer.from(extracted[1].files[0].extract[1]);
 					fileExt = path.extname(thumbnailFileName[0]);
 
+					//Generate thumbnail data
+					imgData = (
+						await sharp(imgData)
+							.resize(100, 150)
+							.webp({
+								quality: 60
+							})
+							.toBuffer()
+					).toString("base64");
+
+					//Return thumbnail data back to renderer
 					process.send({
-						imgData: imgData,
-						imgExt: fileExt,
+						thumbnailData: imgData,
+						thumbnailExt: fileExt,
 						file: file
 					});
 				}

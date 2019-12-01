@@ -5,9 +5,9 @@ body {
 	margin: 5px;
 	background-color: white;
 }
-#directory {
-	/* display: flex; */
-}
+/* #directory {
+	display: flex;
+} */
 .tile {
 	width: 100px;
 	height: 205px;

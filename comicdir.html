@@ -68,27 +68,73 @@
 					`
 				);
 			}
+
+			//variable to store file whose thumbnails are to be generated
+			var thumbnailQueue = [];
+
 			for (const file of files) {
 				var dirEl = document.getElementById("directory");
-				dirEl.innerHTML = dirEl.innerHTML.concat(
-					`
-					<div class="tile file-tile">
-						<img src="" class="comicThumbnail" id="${file.name}"/>
-						<div>${file.name}</div>
-					</div>
-					`
-				);
-			}
-			ipcRenderer.send("thumbnailGenerator", files);
+				var hash = nodeCrypto
+					.createHash("sha1")
+					.update(file.path)
+					.digest("hex");
 
-			ipcRenderer.on("thumbnailGenerator", (e, data) => {
-				imgData = data.imgData;
+				//Check if thumbnail is already present in cache
+				if (store.has(hash)) {
+					var cachedData = store.get(hash);
+					var thumbnailData = cachedData.thumbnailData;
+					var thumbnailExt = cachedData.thumbnailExt;
+					dirEl.innerHTML = dirEl.innerHTML.concat(
+						`
+						<div class="tile file-tile">
+							<img src="data:image/${thumbnailExt};base64, ${thumbnailData}"" class="comicThumbnail" id="${file.name}"/>
+							<div>${file.name}</div>
+						</div>
+						`
+					);
+				} else {
+					thumbnailQueue.push(file);
+					dirEl.innerHTML = dirEl.innerHTML.concat(
+						`
+						<div class="tile file-tile">
+							<img src="" class="comicThumbnail" id="${file.name}"/>
+							<div>${file.name}</div>
+						</div>
+						`
+					);
+				}
+			}
+
+			//Create a child process to generate thumbnails
+			let thumbnailFork = fork("./fileThumbnail.js");
+
+			thumbnailFork.on("message", data => {
+				thumbnailData = data.thumbnailData;
 				id = data.file.name;
-				imgExt = data.imgExt.slice(1);
+				thumbnailExt = data.thumbnailExt.slice(1);
+				var hash = nodeCrypto
+					.createHash("sha1")
+					.update(data.file.path)
+					.digest("hex");
+
+				store.set(hash, {
+					thumbnailData: thumbnailData,
+					thumbnailExt: thumbnailExt
+				});
 
 				document.getElementById(id).src =
-					"data:image/" + imgExt + ";base64, " + imgData;
+					"data:image/" + thumbnailExt + ";base64, " + thumbnailData;
+
+				if (thumbnailQueue.length > 0) {
+					thumbnailFork.send(thumbnailQueue.shift());
+				} else {
+					thumbnailFork.kill();
+				}
 			});
+
+			if (thumbnailQueue.length > 0) {
+				thumbnailFork.send(thumbnailQueue.shift());
+			}
 		</script>
 		<script>
 			window.addEventListener("load", () => {
@@ -136,6 +182,7 @@
 						);
 					}
 					// ipcRenderer.removeAllListeners("thumbnailGenerator");
+					thumbnailFork.kill();
 					store.set("pwd", newDir);
 
 					ipcRenderer.send("index", { msg: "dirSet" });
